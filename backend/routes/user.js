@@ -36,6 +36,10 @@ router.post("/signup", async (req, res) => {
       firstName: req.body.firstName,
       lastName: req.body.lastName,
     });
+    //or
+    /*
+    const user=await User.create(req.body);
+    */
     //in mongodb, user id will be in the form ._id
     const userId = user._id;
     const token = jwt.sign(
