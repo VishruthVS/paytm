@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const zod = require("zod");
 const { JWT_SECRET } = require("../config");
-const { User } = require("../db");
+const { User, Account } = require("../db");
 const jwt = require("jsonwebtoken");
 const { authMiddleWare } = require("../middleware");
 router.use(express.json());
@@ -43,6 +43,10 @@ router.post("/signup", async (req, res) => {
     */
     //in mongodb, user id will be in the form ._id
     const userId = user._id;
+    await Account.create({
+      userId,
+      balance: 1 + Math.random() * 10000,
+    });
     const token = jwt.sign(
       {
         userId,
@@ -117,7 +121,7 @@ const updatedBody = zod.object({
 });
 
 router.put("/", authMiddleWare, async (req, res) => {
-  console.log("hi");
+  console.log("hello");
   const { success } = updatedBody.safeParse(req.body);
   if (!success) {
     return res.status(400).json({
@@ -131,6 +135,34 @@ router.put("/", authMiddleWare, async (req, res) => {
   res.json({
     msg: "User updated successfully",
     userId: userId,
+  });
+});
+
+router.get("/bulk", async (req, res) => {
+  const filter = req.query.filter || "";
+
+  const users = await User.find({
+    $or: [
+      {
+        firstName: {
+          $regex: filter,
+        },
+      },
+      {
+        lastName: {
+          $regex: filter,
+        },
+      },
+    ],
+  });
+
+  res.json({
+    user: users.map((user) => ({
+      userName: user.userName,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      _id: user._id,
+    })),
   });
 });
 
