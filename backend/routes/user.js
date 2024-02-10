@@ -4,6 +4,7 @@ const zod = require("zod");
 const { JWT_SECRET } = require("../config");
 const { User } = require("../db");
 const jwt = require("jsonwebtoken");
+const { authMiddleWare } = require("../middleware");
 router.use(express.json());
 const signupSchema = zod.object({
   userName: zod.string().email(),
@@ -93,6 +94,11 @@ router.post("/signin", async (req, res) => {
       },
       JWT_SECRET
     );
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const userId = decoded.userId;
+    console.log("userId: " + userId);
+    console.log(req.userId); // Accessing req.userId
+    console.log("hi");
     res.json({
       msg: "Logged in successfully",
       token: token,
@@ -102,6 +108,30 @@ router.post("/signin", async (req, res) => {
       message: "Error while logging in",
     });
   }
+});
+
+const updatedBody = zod.object({
+  firstName: zod.string().optional(),
+  lastName: zod.string().optional(),
+  password: zod.string().optional(),
+});
+
+router.put("/", authMiddleWare, async (req, res) => {
+  console.log("hi");
+  const { success } = updatedBody.safeParse(req.body);
+  if (!success) {
+    return res.status(400).json({
+      msg: "Incorrect inputs",
+    });
+  }
+  console.log(req.userId);
+  console.log("hi");
+
+  await User.updateOne(req.body, { _id: req.userId });
+  res.json({
+    msg: "User updated successfully",
+    userId: userId,
+  });
 });
 
 module.exports = router;

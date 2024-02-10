@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-const authmiddleWare = (req, res, next) => {
+const authMiddleWare = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ msg: "Unauthorized" });
@@ -8,8 +8,8 @@ const authmiddleWare = (req, res, next) => {
   let token = authHeader.split(" ")[1]; //retrieve the token from the header
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.userName) {
-      req.userName = decoded.userName;
+    if (decoded.userId) {
+      req.userId = decoded.userId;
       next();
     } else {
       return res.status(403).json({});
@@ -17,4 +17,7 @@ const authmiddleWare = (req, res, next) => {
   } catch (e) {
     return res.status(403).json({});
   }
+};
+module.exports = {
+  authMiddleWare,
 };
